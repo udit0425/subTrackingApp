@@ -1,13 +1,50 @@
+import Constants from 'expo-constants';
 import { useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ChipGroup } from '@/components/ChipGroup';
+import { toISODate } from '@/lib/billing';
+import { BackupError, createBackup, parseBackup, toCSV, type ParsedBackup } from '@/lib/backup';
 import { CURRENCIES, CURRENCY_CODES, type CurrencyCode } from '@/lib/currency';
+import { exportTextFile, pickTextFile } from '@/lib/fileTransfer';
 import { sendTestNotification } from '@/lib/reminders';
 import { useTheme } from '@/lib/theme';
 import { useStore } from '@/store/useStore';
 
 const currencyOptions = CURRENCY_CODES.map((c) => ({ value: c, label: `${CURRENCIES[c].symbol} ${c}` }));
+
+function notify(title: string, message: string) {
+  if (Platform.OS === 'web') window.alert(`${title}\n\n${message}`);
+  else Alert.alert(title, message);
+}
+
+/** Ask how to apply an import. Web has no multi-button dialog, so it only offers merge. */
+function chooseImportMode(parsed: ParsedBackup): Promise<'merge' | 'replace' | null> {
+  const count = parsed.subscriptions.length;
+  const summary =
+    `Found ${count} subscription${count === 1 ? '' : 's'}` +
+    (parsed.skipped ? ` (${parsed.skipped} invalid entr${parsed.skipped === 1 ? 'y' : 'ies'} skipped)` : '') +
+    '.';
+  if (Platform.OS === 'web') {
+    return Promise.resolve(
+      window.confirm(`${summary}\n\nMerge them into your current list? Matching subscriptions will be updated.`)
+        ? 'merge'
+        : null,
+    );
+  }
+  return new Promise((resolve) =>
+    Alert.alert(
+      'Import backup',
+      `${summary}\n\nMerge keeps your current list and updates matching subscriptions. Replace deletes your current data and restores the backup, including currency settings.`,
+      [
+        { text: 'Cancel', style: 'cancel', onPress: () => resolve(null) },
+        { text: 'Merge', onPress: () => resolve('merge') },
+        { text: 'Replace all', style: 'destructive', onPress: () => resolve('replace') },
+      ],
+      { cancelable: true, onDismiss: () => resolve(null) },
+    ),
+  );
+}
 
 function RateInput({ code }: { code: CurrencyCode }) {
   const t = useTheme();
@@ -50,6 +87,63 @@ export default function SettingsScreen() {
   const baseCurrency = useStore((s) => s.settings.baseCurrency);
   const setBaseCurrency = useStore((s) => s.setBaseCurrency);
   const resetRates = useStore((s) => s.resetRates);
+  const importData = useStore((s) => s.importData);
+  const subscriptionCount = useStore((s) => s.subscriptions.length);
+  const [busy, setBusy] = useState(false);
+
+  const run = async (task: () => Promise<void>) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await task();
+    } catch (e) {
+      notify('Something went wrong', e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const exportBackup = () =>
+    run(async () => {
+      const { subscriptions, settings } = useStore.getState();
+      await exportTextFile({
+        filename: `subtracker-backup-${toISODate(new Date())}.json`,
+        content: JSON.stringify(createBackup(subscriptions, settings), null, 2),
+        mimeType: 'application/json',
+        uti: 'public.json',
+      });
+    });
+
+  const exportCSV = () =>
+    run(async () => {
+      const { subscriptions, settings } = useStore.getState();
+      await exportTextFile({
+        filename: `subtracker-${toISODate(new Date())}.csv`,
+        content: toCSV(subscriptions, settings),
+        mimeType: 'text/csv',
+        uti: 'public.comma-separated-values-text',
+      });
+    });
+
+  const importBackup = () =>
+    run(async () => {
+      const text = await pickTextFile();
+      if (text == null) return;
+      let parsed: ParsedBackup;
+      try {
+        parsed = parseBackup(text);
+      } catch (e) {
+        if (e instanceof BackupError) return notify('Could not import', e.message);
+        throw e;
+      }
+      if (parsed.subscriptions.length === 0) {
+        return notify('Nothing to import', 'This backup does not contain any valid subscriptions.');
+      }
+      const mode = await chooseImportMode(parsed);
+      if (!mode) return;
+      importData(parsed.subscriptions, parsed.settings, mode);
+      notify('Import complete', `${parsed.subscriptions.length} subscriptions ${mode === 'merge' ? 'merged' : 'restored'}.`);
+    });
 
   const card = [styles.card, { backgroundColor: t.card, borderColor: t.border }];
 
@@ -101,9 +195,42 @@ export default function SettingsScreen() {
         </Pressable>
       </View>
 
-      <Text style={{ color: t.muted, fontSize: 12, textAlign: 'center' }}>
-        All data is stored on this device only.
-      </Text>
+      <View style={card}>
+        <Text style={[styles.title, { color: t.text }]}>Your data</Text>
+        <Text style={{ color: t.muted, fontSize: 13 }}>
+          Everything is stored on this device only. Export a backup regularly and keep it in Files, iCloud
+          Drive or Google Drive so you can restore it on a new phone.
+        </Text>
+        <Pressable
+          onPress={exportBackup}
+          disabled={busy || subscriptionCount === 0}
+          accessibilityRole="button"
+          style={({ pressed }) => [
+            styles.button,
+            { borderColor: t.primary, opacity: busy || subscriptionCount === 0 ? 0.4 : pressed ? 0.7 : 1 },
+          ]}>
+          <Text style={{ color: t.primary, fontWeight: '600' }}>Export backup (.json)</Text>
+        </Pressable>
+        <Pressable
+          onPress={importBackup}
+          disabled={busy}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.button, { borderColor: t.primary, opacity: busy ? 0.4 : pressed ? 0.7 : 1 }]}>
+          <Text style={{ color: t.primary, fontWeight: '600' }}>Import backup</Text>
+        </Pressable>
+        <Pressable
+          onPress={exportCSV}
+          disabled={busy || subscriptionCount === 0}
+          accessibilityRole="button"
+          style={({ pressed }) => [
+            styles.button,
+            { borderColor: t.border, opacity: busy || subscriptionCount === 0 ? 0.4 : pressed ? 0.7 : 1 },
+          ]}>
+          <Text style={{ color: t.text, fontWeight: '600' }}>Export spreadsheet (.csv)</Text>
+        </Pressable>
+      </View>
+
+      <Text style={{ color: t.muted, fontSize: 12, textAlign: 'center' }}>SubTracker v{Constants.expoConfig?.version ?? '?'}</Text>
     </ScrollView>
   );
 }

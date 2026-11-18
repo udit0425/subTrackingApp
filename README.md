@@ -10,6 +10,7 @@ Offline-first subscription tracker built with Expo (SDK 58), Expo Router and Typ
 - Multi-currency: each subscription keeps its own currency; totals are converted to a display currency using editable rates
 - Local renewal reminders at 9:00 AM, 0/1/3/7 days before renewal (iOS and Android)
 - Data is stored only on the device (AsyncStorage)
+- Backup and restore: export a JSON backup and import it with merge or replace; export a CSV spreadsheet
 
 ## Run
 
@@ -34,7 +35,23 @@ src/components/           form, card, chips, date field
 src/lib/billing.ts        renewal date maths and totals
 src/lib/currency.ts       currencies, conversion, formatting
 src/lib/reminders.ts      notification scheduling
+src/lib/backup.ts         backup format, validation, merge, CSV
+src/lib/fileTransfer.ts   share sheet / document picker / web download
 src/store/useStore.ts     zustand store, persisted to AsyncStorage
 ```
 
 Reminders are rebuilt from the data whenever subscriptions change and on every launch. Each subscription gets its next 3 renewals scheduled, capped at 60 notifications in total because iOS limits pending notifications to 64.
+
+## Release builds (EAS)
+
+App IDs: `com.udit0425.subtracker` (iOS bundle ID and Android package). These cannot be changed after the first store upload.
+
+```bash
+npx eas-cli@latest login
+npx eas-cli@latest init                                # links the project to your Expo account
+npx eas-cli@latest build --profile preview -p android  # installable APK for testing
+npx eas-cli@latest build --profile production --platform all
+npx eas-cli@latest submit -p ios                       # or -p android
+```
+
+Build numbers are managed remotely by EAS and increase automatically for production builds.

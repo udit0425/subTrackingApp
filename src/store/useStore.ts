@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { mergeSubscriptions } from '@/lib/backup';
 import { DEFAULT_RATES, type CurrencyCode } from '@/lib/currency';
 import type { Settings, Subscription, SubscriptionInput } from '@/lib/types';
 
@@ -15,6 +16,8 @@ interface State {
   setBaseCurrency: (code: CurrencyCode) => void;
   setRate: (code: CurrencyCode, rate: number) => void;
   resetRates: () => void;
+  /** merge: imported entries update/extend existing ones, settings untouched. replace: swap everything. */
+  importData: (subscriptions: Subscription[], settings: Settings | null, mode: 'merge' | 'replace') => void;
 }
 
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -44,6 +47,13 @@ export const useStore = create<State>()(
       setRate: (code, rate) =>
         set((s) => ({ settings: { ...s.settings, rates: { ...s.settings.rates, [code]: rate } } })),
       resetRates: () => set((s) => ({ settings: { ...s.settings, rates: { ...DEFAULT_RATES } } })),
+
+      importData: (subscriptions, settings, mode) =>
+        set((s) =>
+          mode === 'replace'
+            ? { subscriptions, settings: settings ?? s.settings }
+            : { subscriptions: mergeSubscriptions(s.subscriptions, subscriptions) },
+        ),
     }),
     {
       name: 'sub-tracker',
