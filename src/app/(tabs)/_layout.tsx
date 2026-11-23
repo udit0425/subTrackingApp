@@ -1,5 +1,6 @@
+import { router } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
-import { Text, type ColorValue } from 'react-native';
+import { Pressable, Text, type ColorValue } from 'react-native';
 
 import { useTheme } from '@/lib/theme';
 
@@ -20,7 +21,23 @@ export default function TabsLayout() {
         headerTitleStyle: { color: t.text },
         sceneStyle: { backgroundColor: t.bg },
       }}>
-      <Tabs.Screen name="index" options={{ title: 'Subscriptions', tabBarIcon: icon('☰') }} />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Subscriptions',
+          tabBarIcon: icon('☰'),
+          headerRight: () => (
+            <Pressable
+              onPress={() => router.push('/subscription/new')}
+              accessibilityRole="button"
+              accessibilityLabel="Add subscription"
+              hitSlop={12}
+              style={{ paddingHorizontal: 16 }}>
+              <Text style={{ color: t.primary, fontSize: 17, fontWeight: '600' }}>+ Add</Text>
+            </Pressable>
+          ),
+        }}
+      />
       <Tabs.Screen name="dashboard" options={{ title: 'Dashboard', tabBarIcon: icon('◔') }} />
       <Tabs.Screen name="settings" options={{ title: 'Settings', tabBarIcon: icon('⚙︎') }} />
     </Tabs>

@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { daysBetween, nextRenewal, renewalLabel } from '@/lib/billing';
@@ -24,32 +24,32 @@ export function SubscriptionCard({ sub }: { sub: Subscription }) {
   const cycleLabel = BILLING_CYCLES.find((c) => c.value === sub.cycle)?.label;
 
   return (
-    <Link href={{ pathname: '/subscription/[id]', params: { id: sub.id } }} asChild>
-      <Pressable
-        accessibilityLabel={`${sub.name}, ${formatMoney(sub.amount, sub.currency)} ${cycleLabel}`}
-        style={({ pressed }) => [
-          styles.card,
-          { backgroundColor: t.card, borderColor: t.border, opacity: pressed ? 0.7 : 1 },
-        ]}>
-        <View style={[styles.avatar, { backgroundColor: color }]}>
-          <Text style={styles.avatarText}>{sub.name.trim().charAt(0).toUpperCase() || '?'}</Text>
-        </View>
-        <View style={styles.middle}>
-          <Text style={[styles.name, { color: t.text }]} numberOfLines={1}>
-            {sub.name}
-          </Text>
-          <Text style={{ color: soon ? t.warn : t.muted, fontSize: 13 }}>
-            Renews {relative(renewalLabel(renewal))}
-            {' · '}
-            {sub.category}
-          </Text>
-        </View>
-        <Text style={[styles.amount, { color: t.text }]}>
-          {formatMoney(sub.amount, sub.currency)}
-          <Text style={{ color: t.muted, fontSize: 12, fontWeight: '400' }}>{CYCLE_SUFFIX[sub.cycle]}</Text>
+    <Pressable
+      onPress={() => router.push({ pathname: '/subscription/[id]', params: { id: sub.id } })}
+      accessibilityRole="button"
+      accessibilityLabel={`${sub.name}, ${formatMoney(sub.amount, sub.currency)} ${cycleLabel}`}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: t.card, borderColor: t.border, opacity: pressed ? 0.7 : 1 },
+      ]}>
+      <View style={[styles.avatar, { backgroundColor: color }]}>
+        <Text style={styles.avatarText}>{sub.name.trim().charAt(0).toUpperCase() || '?'}</Text>
+      </View>
+      <View style={styles.middle}>
+        <Text style={[styles.name, { color: t.text }]} numberOfLines={1}>
+          {sub.name}
         </Text>
+        <Text style={{ color: soon ? t.warn : t.muted, fontSize: 13 }}>
+          Renews {relative(renewalLabel(renewal))}
+          {' · '}
+          {sub.category}
+        </Text>
+      </View>
+      <Text style={[styles.amount, { color: t.text }]}>
+        {formatMoney(sub.amount, sub.currency)}
+        <Text style={{ color: t.muted, fontSize: 12, fontWeight: '400' }}>{CYCLE_SUFFIX[sub.cycle]}</Text>
+      </Text>
       </Pressable>
-    </Link>
   );
 }
 

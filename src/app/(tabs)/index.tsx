@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -7,6 +7,8 @@ import { computeTotals, nextRenewal } from '@/lib/billing';
 import { formatMoney } from '@/lib/currency';
 import { useTheme } from '@/lib/theme';
 import { useStore } from '@/store/useStore';
+
+const openNew = () => router.push('/subscription/new');
 
 export default function SubscriptionsScreen() {
   const t = useTheme();
@@ -50,17 +52,24 @@ export default function SubscriptionsScreen() {
             <Text style={{ color: t.muted, textAlign: 'center' }}>
               Add the services you pay for to see what you spend and get reminded before each renewal.
             </Text>
+            <Pressable
+              onPress={openNew}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.emptyButton, { backgroundColor: t.primary, opacity: pressed ? 0.85 : 1 }]}>
+              <Text style={[styles.fabText, { color: t.onPrimary }]}>Add your first subscription</Text>
+            </Pressable>
           </View>
         }
       />
-      <Link href="/subscription/new" asChild>
+      {subscriptions.length > 0 && (
         <Pressable
+          onPress={openNew}
           accessibilityRole="button"
           accessibilityLabel="Add subscription"
           style={({ pressed }) => [styles.fab, { backgroundColor: t.primary, opacity: pressed ? 0.85 : 1 }]}>
-          <Text style={[styles.fabText, { color: t.onPrimary }]}>+ Add</Text>
+          <Text style={[styles.fabText, { color: t.onPrimary }]}>+ Add subscription</Text>
         </Pressable>
-      </Link>
+      )}
     </View>
   );
 }
@@ -72,9 +81,10 @@ const styles = StyleSheet.create({
   summaryValue: { fontSize: 32, fontWeight: '800' },
   empty: { alignItems: 'center', gap: 8, paddingTop: 80, paddingHorizontal: 24 },
   emptyTitle: { fontSize: 18, fontWeight: '700' },
+  emptyButton: { marginTop: 16, paddingHorizontal: 22, paddingVertical: 14, borderRadius: 999 },
   fab: {
     position: 'absolute',
-    right: 20,
+    alignSelf: 'center',
     bottom: 24,
     paddingHorizontal: 22,
     paddingVertical: 14,
