@@ -1,6 +1,5 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { isValidISODate, parseISODate, toISODate } from '@/lib/billing';
 import { useTheme } from '@/lib/theme';
@@ -12,7 +11,6 @@ interface Props {
 
 export function DateField({ value, onChange }: Props) {
   const t = useTheme();
-  const [text, setText] = useState(value);
 
   if (Platform.OS === 'ios') {
     return (
@@ -46,17 +44,24 @@ export function DateField({ value, onChange }: Props) {
     );
   }
 
-  // Web fallback: plain text input.
+  // Web: the browser's own date picker.
   return (
-    <TextInput
-      value={text}
-      placeholder="YYYY-MM-DD"
-      placeholderTextColor={t.muted}
-      onChangeText={(s) => {
-        setText(s);
-        if (isValidISODate(s)) onChange(s);
+    <input
+      type="date"
+      value={value}
+      onChange={(e) => {
+        if (isValidISODate(e.target.value)) onChange(e.target.value);
       }}
-      style={[styles.box, { borderColor: t.border, backgroundColor: t.card, color: t.text, fontSize: 16 }]}
+      style={{
+        border: `1px solid ${t.border}`,
+        borderRadius: 10,
+        padding: '11px 12px',
+        fontSize: 16,
+        fontFamily: 'inherit',
+        backgroundColor: t.card,
+        color: t.text,
+        colorScheme: t.isDark ? 'dark' : 'light',
+      }}
     />
   );
 }

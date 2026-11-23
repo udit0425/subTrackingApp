@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { computeTotals, daysBetween, nextRenewal, renewalLabel } from '@/lib/billing';
 import { convert, formatMoney } from '@/lib/currency';
-import { CATEGORY_COLORS, useTheme } from '@/lib/theme';
+import { CATEGORY_COLORS, CONTENT_WIDTH, useTheme } from '@/lib/theme';
 import { useStore } from '@/store/useStore';
 
 const UPCOMING_DAYS = 30;
@@ -43,7 +43,7 @@ export default function DashboardScreen() {
   }
 
   return (
-    <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={styles.content}>
+    <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={[styles.content, CONTENT_WIDTH]}>
       <View style={styles.statRow}>
         <View style={[card, styles.stat]}>
           <Text style={[styles.statLabel, { color: t.muted }]}>Per month</Text>

@@ -8,7 +8,7 @@ import { BackupError, createBackup, parseBackup, toCSV, type ParsedBackup } from
 import { CURRENCIES, CURRENCY_CODES, type CurrencyCode } from '@/lib/currency';
 import { exportTextFile, pickTextFile } from '@/lib/fileTransfer';
 import { sendTestNotification } from '@/lib/reminders';
-import { useTheme } from '@/lib/theme';
+import { CONTENT_WIDTH, useTheme } from '@/lib/theme';
 import { useStore } from '@/store/useStore';
 
 const currencyOptions = CURRENCY_CODES.map((c) => ({ value: c, label: `${CURRENCIES[c].symbol} ${c}` }));
@@ -160,7 +160,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={styles.content}>
+    <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={[styles.content, CONTENT_WIDTH]}>
       <View style={card}>
         <Text style={[styles.title, { color: t.text }]}>Display currency</Text>
         <Text style={{ color: t.muted, fontSize: 13 }}>Totals and the dashboard are shown in this currency.</Text>
@@ -182,18 +182,20 @@ export default function SettingsScreen() {
         ))}
       </View>
 
-      <View style={card}>
-        <Text style={[styles.title, { color: t.text }]}>Reminders</Text>
-        <Text style={{ color: t.muted, fontSize: 13 }}>
-          Reminders arrive at 9:00 AM on the day you choose for each subscription.
-        </Text>
-        <Pressable
-          onPress={testReminder}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.button, { borderColor: t.primary, opacity: pressed ? 0.7 : 1 }]}>
-          <Text style={{ color: t.primary, fontWeight: '600' }}>Send a test reminder</Text>
-        </Pressable>
-      </View>
+      {Platform.OS !== 'web' && (
+        <View style={card}>
+          <Text style={[styles.title, { color: t.text }]}>Reminders</Text>
+          <Text style={{ color: t.muted, fontSize: 13 }}>
+            Reminders arrive at 9:00 AM on the day you choose for each subscription.
+          </Text>
+          <Pressable
+            onPress={testReminder}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.button, { borderColor: t.primary, opacity: pressed ? 0.7 : 1 }]}>
+            <Text style={{ color: t.primary, fontWeight: '600' }}>Send a test reminder</Text>
+          </Pressable>
+        </View>
+      )}
 
       <View style={card}>
         <Text style={[styles.title, { color: t.text }]}>Your data</Text>

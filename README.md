@@ -42,6 +42,17 @@ src/store/useStore.ts     zustand store, persisted to AsyncStorage
 
 Reminders are rebuilt from the data whenever subscriptions change and on every launch. Each subscription gets its next 3 renewals scheduled, capped at 60 notifications in total because iOS limits pending notifications to 64.
 
+## Web version
+
+The same code runs in the browser (react-native-web). On web, data is saved in the browser's local storage, renewal reminders are hidden (browsers can't schedule them), and backups download as files.
+
+```bash
+npm run web                          # dev server at http://localhost:8081
+npx expo export --platform web       # static single-page build in dist/
+```
+
+`dist/` can be hosted on any static host (EAS Hosting, Netlify, Vercel, GitHub Pages) with all routes rewritten to `index.html`.
+
 ## Release builds (EAS)
 
 App IDs: `com.udit0425.subtracker` (iOS bundle ID and Android package). These cannot be changed after the first store upload.

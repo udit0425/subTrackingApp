@@ -1,6 +1,7 @@
 import { useColorScheme } from 'react-native';
 
 const light = {
+  isDark: false,
   bg: '#F5F6FA',
   card: '#FFFFFF',
   text: '#0F172A',
@@ -15,6 +16,7 @@ const light = {
 };
 
 const dark: typeof light = {
+  isDark: true,
   bg: '#0B0F19',
   card: '#151B2B',
   text: '#F1F5F9',
@@ -29,6 +31,9 @@ const dark: typeof light = {
 };
 
 export type Theme = typeof light;
+
+/** Keeps pages readable on wide screens (web, tablets); no effect on phones. */
+export const CONTENT_WIDTH = { width: '100%', maxWidth: 760, alignSelf: 'center' } as const;
 
 export function useTheme(): Theme {
   return useColorScheme() === 'dark' ? dark : light;

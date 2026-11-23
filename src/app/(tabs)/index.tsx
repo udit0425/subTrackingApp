@@ -5,7 +5,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SubscriptionCard } from '@/components/SubscriptionCard';
 import { computeTotals, nextRenewal } from '@/lib/billing';
 import { formatMoney } from '@/lib/currency';
-import { useTheme } from '@/lib/theme';
+import { CONTENT_WIDTH, useTheme } from '@/lib/theme';
 import { useStore } from '@/store/useStore';
 
 const openNew = () => router.push('/subscription/new');
@@ -30,7 +30,7 @@ export default function SubscriptionsScreen() {
       <FlatList
         data={sorted}
         keyExtractor={(s) => s.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, CONTENT_WIDTH]}
         ListHeaderComponent={
           subscriptions.length > 0 ? (
             <View style={[styles.summary, { backgroundColor: t.primary }]}>

@@ -1,11 +1,23 @@
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { setupNotifications, syncReminders } from '@/lib/reminders';
 import { useTheme } from '@/lib/theme';
 import { useStore } from '@/store/useStore';
+
+function CancelButton({ color }: { color: string }) {
+  return (
+    <Pressable
+      onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+      accessibilityRole="button"
+      hitSlop={12}
+      style={{ paddingHorizontal: 4 }}>
+      <Text style={{ color, fontSize: 17 }}>Cancel</Text>
+    </Pressable>
+  );
+}
 
 export default function RootLayout() {
   const t = useTheme();
@@ -37,11 +49,26 @@ export default function RootLayout() {
           headerStyle: { backgroundColor: t.card },
           headerTintColor: t.primary,
           headerTitleStyle: { color: t.text },
+          headerShadowVisible: false,
           contentStyle: { backgroundColor: t.bg },
         }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="subscription/new" options={{ presentation: 'modal', title: 'New subscription' }} />
-        <Stack.Screen name="subscription/[id]" options={{ presentation: 'modal', title: 'Edit subscription' }} />
+        <Stack.Screen
+          name="subscription/new"
+          options={{
+            presentation: 'modal',
+            title: 'New subscription',
+            headerLeft: () => <CancelButton color={t.primary} />,
+          }}
+        />
+        <Stack.Screen
+          name="subscription/[id]"
+          options={{
+            presentation: 'modal',
+            title: 'Edit subscription',
+            headerLeft: () => <CancelButton color={t.primary} />,
+          }}
+        />
       </Stack>
     </>
   );

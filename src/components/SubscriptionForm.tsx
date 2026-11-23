@@ -13,7 +13,7 @@ import {
 import { nextRenewal, toISODate } from '@/lib/billing';
 import { CURRENCY_CODES, CURRENCIES, type CurrencyCode } from '@/lib/currency';
 import { ensurePermission } from '@/lib/reminders';
-import { useTheme } from '@/lib/theme';
+import { CONTENT_WIDTH, useTheme } from '@/lib/theme';
 import {
   BILLING_CYCLES,
   CATEGORIES,
@@ -77,7 +77,7 @@ export function SubscriptionForm({ initial, defaultCurrency, submitLabel, onSubm
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
         style={{ backgroundColor: t.bg }}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, CONTENT_WIDTH]}
         keyboardShouldPersistTaps="handled">
         <View style={styles.field}>
           {label('Name')}
@@ -123,13 +123,12 @@ export function SubscriptionForm({ initial, defaultCurrency, submitLabel, onSubm
           <ChipGroup options={categoryOptions} value={category} onChange={setCategory} />
         </View>
 
-        <View style={styles.field}>
-          {label('Remind me before renewal')}
-          <ChipGroup options={REMINDER_OPTIONS} value={reminder} onChange={setReminder} />
-          {Platform.OS === 'web' && reminder != null && (
-            <Text style={{ color: t.muted, fontSize: 13 }}>Reminders only work on iOS and Android.</Text>
-          )}
-        </View>
+        {Platform.OS !== 'web' && (
+          <View style={styles.field}>
+            {label('Remind me before renewal')}
+            <ChipGroup options={REMINDER_OPTIONS} value={reminder} onChange={setReminder} />
+          </View>
+        )}
 
         <View style={styles.field}>
           {label('Notes (optional)')}

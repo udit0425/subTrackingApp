@@ -24,7 +24,9 @@
       "package": "com.udit0425.subtracker"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "single",
+      "name": "SubTracker"
     },
     "plugins": [
       "expo-router",
