@@ -1,14 +1,17 @@
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ChipGroup } from '@/components/ChipGroup';
 import { toISODate } from '@/lib/billing';
 import { BackupError, createBackup, parseBackup, toCSV, type ParsedBackup } from '@/lib/backup';
+import { accountsConfigured } from '@/lib/api';
 import { CURRENCIES, CURRENCY_CODES, type CurrencyCode } from '@/lib/currency';
 import { exportTextFile, pickTextFile } from '@/lib/fileTransfer';
 import { sendTestNotification } from '@/lib/reminders';
 import { CONTENT_WIDTH, useTheme } from '@/lib/theme';
+import { useAuth } from '@/store/useAuth';
 import { useStore } from '@/store/useStore';
 
 const currencyOptions = CURRENCY_CODES.map((c) => ({ value: c, label: `${CURRENCIES[c].symbol} ${c}` }));
@@ -90,6 +93,9 @@ export default function SettingsScreen() {
   const importData = useStore((s) => s.importData);
   const subscriptionCount = useStore((s) => s.subscriptions.length);
   const [busy, setBusy] = useState(false);
+  const authStatus = useAuth((s) => s.status);
+  const accountName = useAuth((s) => s.name);
+  const signOut = useAuth((s) => s.signOut);
 
   const run = async (task: () => Promise<void>) => {
     if (busy) return;
@@ -161,6 +167,46 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={[styles.content, CONTENT_WIDTH]}>
+      {accountsConfigured && Platform.OS !== 'web' && (
+        <View style={card}>
+          <Text style={[styles.title, { color: t.text }]}>Account</Text>
+          {authStatus === 'signedIn' ? (
+            <>
+              <Text style={{ color: t.muted, fontSize: 13 }}>
+                Signed in{accountName ? ` as ${accountName}` : ''}. Your subscriptions are not synced yet, so they still
+                live on this phone.
+              </Text>
+              <Pressable
+                onPress={() => run(signOut)}
+                disabled={busy}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.button, { borderColor: t.danger, opacity: pressed ? 0.7 : 1 }]}>
+                <Text style={{ color: t.danger, fontWeight: '600' }}>Sign out</Text>
+              </Pressable>
+            </>
+          ) : authStatus === 'signedOut' ? (
+            <>
+              <Text style={{ color: t.muted, fontSize: 13 }}>
+                Create an account or sign in with your email. Syncing is not available yet, so your data stays on
+                this phone.
+              </Text>
+              <Pressable
+                onPress={() => router.push('/auth/login')}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.button, { borderColor: t.primary, opacity: pressed ? 0.7 : 1 }]}>
+                <Text style={{ color: t.primary, fontWeight: '600' }}>Sign in</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => router.push('/auth/signup')}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.button, { borderColor: t.primary, opacity: pressed ? 0.7 : 1 }]}>
+                <Text style={{ color: t.primary, fontWeight: '600' }}>Create account</Text>
+              </Pressable>
+            </>
+          ) : null}
+        </View>
+      )}
+
       <View style={card}>
         <Text style={[styles.title, { color: t.text }]}>Display currency</Text>
         <Text style={{ color: t.muted, fontSize: 13 }}>Totals and the dashboard are shown in this currency.</Text>

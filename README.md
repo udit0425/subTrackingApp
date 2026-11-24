@@ -12,6 +12,10 @@ Offline-first subscription tracker built with Expo (SDK 58), Expo Router and Typ
 - Data is stored only on the device (AsyncStorage)
 - Backup and restore: export a JSON backup and import it with merge or replace; export a CSV spreadsheet
 
+## Accounts (preview)
+
+Sign-in uses email and password, with a verification link sent by email. Sessions are kept in the device's secure storage (`expo-secure-store`). Subscriptions still live on the device until syncing is built. The API is in `server/`; see `server/README.md`. The app needs `EXPO_PUBLIC_API_URL` at build time, and the account screens are hidden on web.
+
 ## Run
 
 ```bash

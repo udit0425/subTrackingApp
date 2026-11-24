@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { setupNotifications, syncReminders } from '@/lib/reminders';
 import { useTheme } from '@/lib/theme';
+import { useAuth } from '@/store/useAuth';
 import { useStore } from '@/store/useStore';
 
 function CancelButton({ color }: { color: string }) {
@@ -23,6 +24,10 @@ export default function RootLayout() {
   const t = useTheme();
   const hydrated = useStore((s) => s.hydrated);
   const subscriptions = useStore((s) => s.subscriptions);
+
+  useEffect(() => {
+    useAuth.getState().hydrate().catch((e) => console.warn('Session check failed', e));
+  }, []);
 
   useEffect(() => {
     setupNotifications().catch((e) => console.warn('Notification setup failed', e));
@@ -66,6 +71,22 @@ export default function RootLayout() {
           options={{
             presentation: 'modal',
             title: 'Edit subscription',
+            headerLeft: () => <CancelButton color={t.primary} />,
+          }}
+        />
+        <Stack.Screen
+          name="auth/login"
+          options={{
+            presentation: 'modal',
+            title: 'Sign in',
+            headerLeft: () => <CancelButton color={t.primary} />,
+          }}
+        />
+        <Stack.Screen
+          name="auth/signup"
+          options={{
+            presentation: 'modal',
+            title: 'Create account',
             headerLeft: () => <CancelButton color={t.primary} />,
           }}
         />
