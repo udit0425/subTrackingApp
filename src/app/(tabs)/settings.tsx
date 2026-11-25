@@ -4,6 +4,7 @@ import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, Vi
 
 import { ChipGroup } from '@/components/ChipGroup';
 import { toISODate } from '@/lib/billing';
+import { COUNTRIES, COUNTRY_CODES, defaultCountry } from '@/lib/catalog';
 import { BackupError, createBackup, parseBackup, toCSV, type ParsedBackup } from '@/lib/backup';
 import { CURRENCIES, CURRENCY_CODES, type CurrencyCode } from '@/lib/currency';
 import { exportTextFile, pickTextFile } from '@/lib/fileTransfer';
@@ -11,6 +12,7 @@ import { sendTestNotification } from '@/lib/reminders';
 import { CONTENT_WIDTH, useTheme } from '@/lib/theme';
 import { useStore } from '@/store/useStore';
 
+const countryOptions = COUNTRY_CODES.map((c) => ({ value: c, label: COUNTRIES[c].name }));
 const currencyOptions = CURRENCY_CODES.map((c) => ({ value: c, label: `${CURRENCIES[c].symbol} ${c}` }));
 
 function notify(title: string, message: string) {
@@ -86,6 +88,8 @@ export default function SettingsScreen() {
   const t = useTheme();
   const baseCurrency = useStore((s) => s.settings.baseCurrency);
   const setBaseCurrency = useStore((s) => s.setBaseCurrency);
+  const country = useStore((s) => s.settings.country) ?? defaultCountry(baseCurrency);
+  const setCountry = useStore((s) => s.setCountry);
   const resetRates = useStore((s) => s.resetRates);
   const importData = useStore((s) => s.importData);
   const subscriptionCount = useStore((s) => s.subscriptions.length);
@@ -165,6 +169,14 @@ export default function SettingsScreen() {
         <Text style={[styles.title, { color: t.text }]}>Display currency</Text>
         <Text style={{ color: t.muted, fontSize: 13 }}>Totals and the dashboard are shown in this currency.</Text>
         <ChipGroup options={currencyOptions} value={baseCurrency} onChange={setBaseCurrency} />
+      </View>
+
+      <View style={card}>
+        <Text style={[styles.title, { color: t.text }]}>Country</Text>
+        <Text style={{ color: t.muted, fontSize: 13 }}>
+          Popular services and their plans are suggested for this country when you add a subscription.
+        </Text>
+        <ChipGroup options={countryOptions} value={country} onChange={setCountry} />
       </View>
 
       <View style={card}>

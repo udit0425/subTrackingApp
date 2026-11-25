@@ -7,6 +7,7 @@ Offline-first subscription tracker built with Expo (SDK 58), Expo Router and Typ
 - Add, edit and delete subscriptions (name, price, currency, billing cycle, first billing date, category, notes)
 - Renewal dates calculated automatically from the first billing date (weekly / monthly / quarterly / yearly, month-end safe)
 - Tags you create yourself (e.g. Work, Family plan): add them on the add/edit screen, then filter the list by tag; the totals follow the filter
+- Popular services: pick a service and plan (India, US, UK) to fill in the name, price, currency, cycle and category; prices are editable and listed in `src/lib/catalog.ts` with the month they were checked
 - Dashboard: monthly and yearly totals, spend by category, renewals in the next 30 days
 - Multi-currency: each subscription keeps its own currency; totals are converted to a display currency using editable rates
 - Local renewal reminders at 9:00 AM, 0/1/3/7 days before renewal (iOS and Android)

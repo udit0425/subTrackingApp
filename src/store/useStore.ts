@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { mergeSubscriptions } from '@/lib/backup';
+import type { CountryCode } from '@/lib/catalog';
 import { DEFAULT_RATES, type CurrencyCode } from '@/lib/currency';
 import type { Settings, Subscription, SubscriptionInput } from '@/lib/types';
 
@@ -16,6 +17,7 @@ interface State {
   setBaseCurrency: (code: CurrencyCode) => void;
   setRate: (code: CurrencyCode, rate: number) => void;
   resetRates: () => void;
+  setCountry: (country: CountryCode) => void;
   /** merge: imported entries update/extend existing ones, settings untouched. replace: swap everything. */
   importData: (subscriptions: Subscription[], settings: Settings | null, mode: 'merge' | 'replace') => void;
 }
@@ -47,6 +49,7 @@ export const useStore = create<State>()(
       setRate: (code, rate) =>
         set((s) => ({ settings: { ...s.settings, rates: { ...s.settings.rates, [code]: rate } } })),
       resetRates: () => set((s) => ({ settings: { ...s.settings, rates: { ...DEFAULT_RATES } } })),
+      setCountry: (country) => set((s) => ({ settings: { ...s.settings, country } })),
 
       importData: (subscriptions, settings, mode) =>
         set((s) =>
