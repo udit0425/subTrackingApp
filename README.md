@@ -55,7 +55,7 @@ npx expo export --platform web       # static single-page build in dist/
 
 Live at **https://subtrackerapp.expo.app** (EAS Hosting, project `@udit2504/sub-tracker`).
 
-To publish changes: `npm run deploy:web` (needs `npx expo login` as udit2504).
+Every push to `main` redeploys it automatically (`.github/workflows/deploy-web.yml`, needs the `EXPO_TOKEN` repository secret). To deploy by hand: `npm run deploy:web` (needs `npx expo login` as udit2504).
 
 ## Release builds (EAS)
 
