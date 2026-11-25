@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { nextRenewal, toISODate } from '@/lib/billing';
+import { COUNTRIES, defaultCountry, planLabel } from '@/lib/catalog';
 import { CURRENCY_CODES, CURRENCIES, type CurrencyCode } from '@/lib/currency';
 import { ensurePermission } from '@/lib/reminders';
 import { normalizeTags } from '@/lib/tags';
@@ -23,9 +24,11 @@ import {
   type Category,
   type SubscriptionInput,
 } from '@/lib/types';
+import { useStore } from '@/store/useStore';
 
 import { ChipGroup } from './ChipGroup';
 import { DateField } from './DateField';
+import { ServicePicker, type PickedPlan } from './ServicePicker';
 import { TagPicker, addTypedTag } from './TagPicker';
 
 interface Props {
@@ -54,6 +57,21 @@ export function SubscriptionForm({ initial, defaultCurrency, knownTags, submitLa
   const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
   const [tagDraft, setTagDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [picked, setPicked] = useState<PickedPlan | null>(null);
+  const savedCountry = useStore((s) => s.settings.country);
+  const setCountry = useStore((s) => s.setCountry);
+  const country = savedCountry ?? defaultCountry(defaultCurrency);
+
+  /** Fill the form from a catalog plan; every field stays editable. */
+  const applyPlan = (p: PickedPlan) => {
+    setPicked(p);
+    setName(planLabel(p.service, p.plan));
+    setAmount(String(p.plan.amount));
+    setCurrency(COUNTRIES[p.country].currency);
+    setCycle(p.plan.cycle);
+    setCategory(p.service.category);
+    setError(null);
+  };
 
   const parsedAmount = Number(amount.replace(',', '.'));
 
@@ -89,6 +107,11 @@ export function SubscriptionForm({ initial, defaultCurrency, knownTags, submitLa
         contentContainerStyle={[styles.content, CONTENT_WIDTH]}
         keyboardShouldPersistTaps="handled">
         <View style={styles.field}>
+          {label(initial ? 'Switch to a popular plan (optional)' : 'Popular service (optional)')}
+          <ServicePicker country={country} onCountryChange={setCountry} picked={picked} onPick={applyPlan} />
+        </View>
+
+        <View style={styles.field}>
           {label('Name')}
           <TextInput
             value={name}
@@ -96,7 +119,6 @@ export function SubscriptionForm({ initial, defaultCurrency, knownTags, submitLa
             placeholder="Netflix, Spotify, iCloud…"
             placeholderTextColor={t.muted}
             style={inputStyle}
-            autoFocus={!initial}
             returnKeyType="next"
           />
         </View>

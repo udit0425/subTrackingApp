@@ -1,3 +1,4 @@
+import type { CountryCode } from './catalog';
 import type { CurrencyCode } from './currency';
 
 export type BillingCycle = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
@@ -53,4 +54,6 @@ export interface Settings {
   baseCurrency: CurrencyCode;
   /** Units of each currency per 1 USD. */
   rates: Record<CurrencyCode, number>;
+  /** Country whose popular services and prices the add form offers. Unset until the user picks one. */
+  country?: CountryCode;
 }

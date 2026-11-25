@@ -1,4 +1,5 @@
 import { isValidISODate, monthlyCostIn, nextRenewal, toISODate } from './billing';
+import { isCountryCode } from './catalog';
 import { CURRENCIES, DEFAULT_RATES, type CurrencyCode } from './currency';
 import { normalizeTags } from './tags';
 import {
@@ -93,7 +94,7 @@ function parseSettings(raw: unknown): Settings | null {
     }
   }
   rates.USD = 1;
-  return { baseCurrency: raw.baseCurrency, rates };
+  return { baseCurrency: raw.baseCurrency, rates, ...(isCountryCode(raw.country) && { country: raw.country }) };
 }
 
 /** Parse and validate backup file contents. Throws BackupError with a user-facing message. */
