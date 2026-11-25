@@ -1,7 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { useMemo } from 'react';
 import { Alert, Platform, Text, View } from 'react-native';
 
 import { SubscriptionForm } from '@/components/SubscriptionForm';
+import { allTags } from '@/lib/tags';
 import { useTheme } from '@/lib/theme';
 import { useStore } from '@/store/useStore';
 
@@ -24,6 +26,8 @@ export default function EditSubscriptionScreen() {
   const baseCurrency = useStore((s) => s.settings.baseCurrency);
   const updateSubscription = useStore((s) => s.updateSubscription);
   const removeSubscription = useStore((s) => s.removeSubscription);
+  const subscriptions = useStore((s) => s.subscriptions);
+  const knownTags = useMemo(() => allTags(subscriptions), [subscriptions]);
 
   if (!sub) {
     return (
@@ -39,6 +43,7 @@ export default function EditSubscriptionScreen() {
     <SubscriptionForm
       initial={initial}
       defaultCurrency={baseCurrency}
+      knownTags={knownTags}
       submitLabel="Save changes"
       onSubmit={(input) => {
         updateSubscription(sub.id, input);

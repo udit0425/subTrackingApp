@@ -1,11 +1,13 @@
 import { router } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { InstallAppBanner } from '@/components/InstallAppBanner';
 import { SubscriptionCard } from '@/components/SubscriptionCard';
+import { TagFilter } from '@/components/TagFilter';
 import { computeTotals, nextRenewal } from '@/lib/billing';
 import { formatMoney } from '@/lib/currency';
+import { allTags, hasTag, sameTag } from '@/lib/tags';
 import { CONTENT_WIDTH, useTheme } from '@/lib/theme';
 import { useStore } from '@/store/useStore';
 
@@ -16,33 +18,42 @@ export default function SubscriptionsScreen() {
   const subscriptions = useStore((s) => s.subscriptions);
   const settings = useStore((s) => s.settings);
 
-  const sorted = useMemo(
+  const tags = useMemo(() => allTags(subscriptions), [subscriptions]);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  // Falls back to "All" if the selected tag was removed from every subscription.
+  const activeTag = selectedTag ? (tags.find((tag) => sameTag(tag, selectedTag)) ?? null) : null;
+
+  const visible = useMemo(
     () =>
       subscriptions
+        .filter((s) => !activeTag || hasTag(s, activeTag))
         .map((s) => ({ s, next: nextRenewal(s).getTime() }))
         .sort((a, b) => a.next - b.next)
         .map(({ s }) => s),
-    [subscriptions],
+    [subscriptions, activeTag],
   );
-  const totals = useMemo(() => computeTotals(subscriptions, settings), [subscriptions, settings]);
+  const totals = useMemo(() => computeTotals(visible, settings), [visible, settings]);
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <FlatList
-        data={sorted}
+        data={visible}
         keyExtractor={(s) => s.id}
         contentContainerStyle={[styles.list, CONTENT_WIDTH]}
         ListHeaderComponent={
           <>
             <InstallAppBanner />
+            {tags.length > 0 && <TagFilter tags={tags} selected={activeTag} onSelect={setSelectedTag} />}
             {subscriptions.length > 0 && (
               <View style={[styles.summary, { backgroundColor: t.primary }]}>
-                <Text style={[styles.summaryLabel, { color: t.onPrimary }]}>Monthly spend</Text>
+                <Text style={[styles.summaryLabel, { color: t.onPrimary }]}>
+                  Monthly spend{activeTag ? ` · ${activeTag}` : ''}
+                </Text>
                 <Text style={[styles.summaryValue, { color: t.onPrimary }]}>
                   {formatMoney(totals.monthly, settings.baseCurrency)}
                 </Text>
                 <Text style={{ color: t.onPrimary, opacity: 0.85 }}>
-                  {subscriptions.length} active · {formatMoney(totals.yearly, settings.baseCurrency)} / year
+                  {visible.length} {activeTag ? 'tagged' : 'active'} · {formatMoney(totals.yearly, settings.baseCurrency)} / year
                 </Text>
               </View>
             )}

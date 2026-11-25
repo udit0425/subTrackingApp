@@ -44,12 +44,24 @@ export function SubscriptionCard({ sub }: { sub: Subscription }) {
           {' · '}
           {sub.category}
         </Text>
+        {sub.tags && sub.tags.length > 0 && (
+          <View style={styles.tags}>
+            {sub.tags.map((tag) => (
+              <Text
+                key={tag}
+                numberOfLines={1}
+                style={[styles.tag, { color: t.primary, backgroundColor: t.primarySoft }]}>
+                {tag}
+              </Text>
+            ))}
+          </View>
+        )}
       </View>
       <Text style={[styles.amount, { color: t.text }]}>
         {formatMoney(sub.amount, sub.currency)}
         <Text style={{ color: t.muted, fontSize: 12, fontWeight: '400' }}>{CYCLE_SUFFIX[sub.cycle]}</Text>
       </Text>
-      </Pressable>
+    </Pressable>
   );
 }
 
@@ -66,5 +78,7 @@ const styles = StyleSheet.create({
   avatarText: { color: '#fff', fontWeight: '700', fontSize: 17 },
   middle: { flex: 1, gap: 2 },
   name: { fontSize: 16, fontWeight: '600' },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 3 },
+  tag: { fontSize: 11, fontWeight: '600', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, overflow: 'hidden' },
   amount: { fontSize: 16, fontWeight: '600' },
 });

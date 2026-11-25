@@ -13,6 +13,7 @@ import {
 import { nextRenewal, toISODate } from '@/lib/billing';
 import { CURRENCY_CODES, CURRENCIES, type CurrencyCode } from '@/lib/currency';
 import { ensurePermission } from '@/lib/reminders';
+import { normalizeTags } from '@/lib/tags';
 import { CONTENT_WIDTH, useTheme } from '@/lib/theme';
 import {
   BILLING_CYCLES,
@@ -25,10 +26,13 @@ import {
 
 import { ChipGroup } from './ChipGroup';
 import { DateField } from './DateField';
+import { TagPicker, addTypedTag } from './TagPicker';
 
 interface Props {
   initial?: SubscriptionInput;
   defaultCurrency: CurrencyCode;
+  /** Tags used on any subscription, offered as suggestions. */
+  knownTags: string[];
   submitLabel: string;
   onSubmit: (input: SubscriptionInput) => void;
   onDelete?: () => void;
@@ -37,7 +41,7 @@ interface Props {
 const currencyOptions = CURRENCY_CODES.map((c) => ({ value: c, label: `${CURRENCIES[c].symbol} ${c}` }));
 const categoryOptions = CATEGORIES.map((c) => ({ value: c, label: c }));
 
-export function SubscriptionForm({ initial, defaultCurrency, submitLabel, onSubmit, onDelete }: Props) {
+export function SubscriptionForm({ initial, defaultCurrency, knownTags, submitLabel, onSubmit, onDelete }: Props) {
   const t = useTheme();
   const [name, setName] = useState(initial?.name ?? '');
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
@@ -47,6 +51,8 @@ export function SubscriptionForm({ initial, defaultCurrency, submitLabel, onSubm
   const [category, setCategory] = useState<Category>(initial?.category ?? 'Entertainment');
   const [reminder, setReminder] = useState<number | null>(initial ? initial.reminderDaysBefore : 1);
   const [notes, setNotes] = useState(initial?.notes ?? '');
+  const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
+  const [tagDraft, setTagDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const parsedAmount = Number(amount.replace(',', '.'));
@@ -57,6 +63,8 @@ export function SubscriptionForm({ initial, defaultCurrency, submitLabel, onSubm
       return setError('Enter a price greater than 0.');
     }
     setError(null);
+    // Include a tag that was typed but not added with the Add button.
+    const finalTags = normalizeTags(addTypedTag(tags, tagDraft, knownTags));
     if (reminder != null) await ensurePermission();
     onSubmit({
       name: name.trim(),
@@ -67,6 +75,7 @@ export function SubscriptionForm({ initial, defaultCurrency, submitLabel, onSubm
       category,
       reminderDaysBefore: reminder,
       notes: notes.trim() || undefined,
+      tags: finalTags.length > 0 ? finalTags : undefined,
     });
   };
 
@@ -121,6 +130,17 @@ export function SubscriptionForm({ initial, defaultCurrency, submitLabel, onSubm
         <View style={styles.field}>
           {label('Category')}
           <ChipGroup options={categoryOptions} value={category} onChange={setCategory} />
+        </View>
+
+        <View style={styles.field}>
+          {label('Tags (optional)')}
+          <TagPicker
+            value={tags}
+            onChange={setTags}
+            suggestions={knownTags}
+            draft={tagDraft}
+            onDraftChange={setTagDraft}
+          />
         </View>
 
         {Platform.OS !== 'web' && (

@@ -42,6 +42,8 @@ export interface Subscription {
   category: Category;
   reminderDaysBefore: number | null;
   notes?: string;
+  /** Labels the user makes up (e.g. "Work", "Family plan") for filtering. Missing in data saved before tags existed. */
+  tags?: string[];
   createdAt: number;
 }
 

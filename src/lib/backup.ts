@@ -1,5 +1,6 @@
 import { isValidISODate, monthlyCostIn, nextRenewal, toISODate } from './billing';
 import { CURRENCIES, DEFAULT_RATES, type CurrencyCode } from './currency';
+import { normalizeTags } from './tags';
 import {
   BILLING_CYCLES,
   CATEGORIES,
@@ -46,7 +47,7 @@ const CYCLES = BILLING_CYCLES.map((c) => c.value) as string[];
 
 function parseSubscription(raw: unknown): Subscription | null {
   if (!isObject(raw)) return null;
-  const { id, name, amount, currency, cycle, startDate, category, reminderDaysBefore, notes, createdAt } = raw;
+  const { id, name, amount, currency, cycle, startDate, category, reminderDaysBefore, notes, tags, createdAt } = raw;
   if (typeof id !== 'string' || !id) return null;
   if (typeof name !== 'string' || !name.trim()) return null;
   if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) return null;
@@ -62,6 +63,10 @@ function parseSubscription(raw: unknown): Subscription | null {
       ? reminderDaysBefore
       : null;
 
+  const cleanTags = Array.isArray(tags)
+    ? normalizeTags(tags.filter((t): t is string => typeof t === 'string'))
+    : [];
+
   return {
     id,
     name: name.trim(),
@@ -72,6 +77,7 @@ function parseSubscription(raw: unknown): Subscription | null {
     category: (CATEGORIES as readonly string[]).includes(category as string) ? (category as Category) : 'Other',
     reminderDaysBefore: reminder,
     notes: typeof notes === 'string' && notes.trim() ? notes.trim() : undefined,
+    ...(cleanTags.length > 0 && { tags: cleanTags }),
     createdAt: typeof createdAt === 'number' && Number.isFinite(createdAt) ? createdAt : Date.now(),
   };
 }
@@ -138,6 +144,7 @@ export function toCSV(subscriptions: Subscription[], settings: Settings, now = n
   const header = [
     'Name',
     'Category',
+    'Tags',
     'Amount',
     'Currency',
     'Billing cycle',
@@ -150,6 +157,7 @@ export function toCSV(subscriptions: Subscription[], settings: Settings, now = n
   const rows = subscriptions.map((s) => [
     s.name,
     s.category,
+    (s.tags ?? []).join('; '),
     s.amount,
     s.currency,
     s.cycle,
