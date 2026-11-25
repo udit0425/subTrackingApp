@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AndroidDownloadBanner } from '@/components/AndroidDownloadBanner';
+import { InstallAppBanner } from '@/components/InstallAppBanner';
 import { SubscriptionCard } from '@/components/SubscriptionCard';
 import { computeTotals, nextRenewal } from '@/lib/billing';
 import { formatMoney } from '@/lib/currency';
@@ -34,7 +34,7 @@ export default function SubscriptionsScreen() {
         contentContainerStyle={[styles.list, CONTENT_WIDTH]}
         ListHeaderComponent={
           <>
-            <AndroidDownloadBanner />
+            <InstallAppBanner />
             {subscriptions.length > 0 && (
               <View style={[styles.summary, { backgroundColor: t.primary }]}>
                 <Text style={[styles.summaryLabel, { color: t.onPrimary }]}>Monthly spend</Text>

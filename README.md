@@ -71,8 +71,14 @@ Build numbers are managed remotely by EAS and increase automatically for product
 
 ## Android APK download (GitHub Actions)
 
-Every push to `main` runs `.github/workflows/build-apk.yml`, which builds a signed APK and publishes it as the latest GitHub release. The web version shows a **Download APK** banner (web only) that links to:
+Every push to `main` runs `.github/workflows/build-apk.yml`, which builds a signed APK and publishes it as the latest GitHub release. The web version shows a **Download APK** banner (web only, hidden on iPhone and iPad) that links to:
 
 https://github.com/udit0425/subTrackingApp/releases/latest/download/subtracker.apk
 
 The workflow needs four repository secrets (Settings → Secrets and variables → Actions): `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`. Keep a copy of the keystore: every APK must be signed with the same key, or phones can't install the update over the existing app (and uninstalling deletes the app's data).
+
+## iPhone (Home Screen web app)
+
+There is no iOS build yet. On iPhone, open the website in Safari and tap Share → **Add to Home Screen**: it opens full screen with its own icon, and data stays in that phone's browser storage. Reminders don't work there. The website shows iPhone visitors this tip in place of the APK banner, and hides it once opened from the Home Screen.
+
+Files in `public/` are copied into the web build: `index.html` (page template with the Home Screen tags), `manifest.json`, and the icons.
