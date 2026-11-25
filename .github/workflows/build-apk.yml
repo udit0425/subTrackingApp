@@ -1,0 +1,91 @@
+name: Build Android APK
+
+# Builds a signed APK and publishes it as the latest GitHub release.
+# The website's "Download APK" button links to:
+#   https://github.com/<owner>/<repo>/releases/latest/download/subtracker.apk
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_BASE64  base64 of the release keystore (.jks)
+#   ANDROID_KEYSTORE_PASSWORD
+#   ANDROID_KEY_ALIAS
+#   ANDROID_KEY_PASSWORD
+# Always sign with the same keystore, or phones can't install updates over the old app.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ANDROID_VERSION_CODE: ${{ github.run_number }}
+      KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+    steps:
+      - name: Check signing secrets
+        run: |
+          for v in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing secret ANDROID_$v. See the comment at the top of build-apk.yml."
+              exit 1
+            fi
+          done
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: npm ci
+      - run: npm run typecheck
+
+      - name: Generate native Android project
+        run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Build release APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+
+      - name: Sign APK with the release key
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks "$RUNNER_TEMP/release.jks" \
+            --ks-pass env:KEYSTORE_PASSWORD \
+            --ks-key-alias "$KEY_ALIAS" \
+            --key-pass env:KEY_PASSWORD \
+            --out subtracker.apk \
+            android/app/build/outputs/apk/release/app-release.apk
+          "$BUILD_TOOLS/apksigner" verify --print-certs subtracker.apk
+          rm "$RUNNER_TEMP/release.jks"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./app.json').expo.version")
+          gh release create "android-build-${{ github.run_number }}" subtracker.apk \
+            --target "${{ github.sha }}" \
+            --title "SubTracker ${VERSION} (build ${{ github.run_number }})" \
+            --notes "Android APK built from ${{ github.sha }}. Install on your phone and allow installs from your browser if asked. Data stays on the device." \
+            --latest
