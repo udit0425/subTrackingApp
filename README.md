@@ -51,7 +51,9 @@ npm run web                          # dev server at http://localhost:8081
 npx expo export --platform web       # static single-page build in dist/
 ```
 
-`dist/` can be hosted on any static host (EAS Hosting, Netlify, Vercel, GitHub Pages) with all routes rewritten to `index.html`.
+Live at **https://subtrackerapp.expo.app** (EAS Hosting, project `@udit2504/sub-tracker`).
+
+To publish changes: `npm run deploy:web` (needs `npx expo login` as udit2504).
 
 ## Release builds (EAS)
 
