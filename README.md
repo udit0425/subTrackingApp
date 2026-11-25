@@ -68,3 +68,11 @@ npx eas-cli@latest submit -p ios                       # or -p android
 ```
 
 Build numbers are managed remotely by EAS and increase automatically for production builds.
+
+## Android APK download (GitHub Actions)
+
+Every push to `main` runs `.github/workflows/build-apk.yml`, which builds a signed APK and publishes it as the latest GitHub release. The web version shows a **Download APK** banner (web only) that links to:
+
+https://github.com/udit0425/subTrackingApp/releases/latest/download/subtracker.apk
+
+The workflow needs four repository secrets (Settings → Secrets and variables → Actions): `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`. Keep a copy of the keystore: every APK must be signed with the same key, or phones can't install the update over the existing app (and uninstalling deletes the app's data).

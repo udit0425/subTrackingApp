@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AndroidDownloadBanner } from '@/components/AndroidDownloadBanner';
 import { SubscriptionCard } from '@/components/SubscriptionCard';
 import { computeTotals, nextRenewal } from '@/lib/billing';
 import { formatMoney } from '@/lib/currency';
@@ -32,17 +33,20 @@ export default function SubscriptionsScreen() {
         keyExtractor={(s) => s.id}
         contentContainerStyle={[styles.list, CONTENT_WIDTH]}
         ListHeaderComponent={
-          subscriptions.length > 0 ? (
-            <View style={[styles.summary, { backgroundColor: t.primary }]}>
-              <Text style={[styles.summaryLabel, { color: t.onPrimary }]}>Monthly spend</Text>
-              <Text style={[styles.summaryValue, { color: t.onPrimary }]}>
-                {formatMoney(totals.monthly, settings.baseCurrency)}
-              </Text>
-              <Text style={{ color: t.onPrimary, opacity: 0.85 }}>
-                {subscriptions.length} active · {formatMoney(totals.yearly, settings.baseCurrency)} / year
-              </Text>
-            </View>
-          ) : undefined
+          <>
+            <AndroidDownloadBanner />
+            {subscriptions.length > 0 && (
+              <View style={[styles.summary, { backgroundColor: t.primary }]}>
+                <Text style={[styles.summaryLabel, { color: t.onPrimary }]}>Monthly spend</Text>
+                <Text style={[styles.summaryValue, { color: t.onPrimary }]}>
+                  {formatMoney(totals.monthly, settings.baseCurrency)}
+                </Text>
+                <Text style={{ color: t.onPrimary, opacity: 0.85 }}>
+                  {subscriptions.length} active · {formatMoney(totals.yearly, settings.baseCurrency)} / year
+                </Text>
+              </View>
+            )}
+          </>
         }
         renderItem={({ item }) => <SubscriptionCard sub={item} />}
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
